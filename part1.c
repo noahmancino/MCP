@@ -1,9 +1,9 @@
 #include <stdio.h>
 #include <unistd.h>
 #include <sys/wait.h>
-#include "MCP.h"
-
-int main(int argc, char *argv[]) {
+//#include "MCP.h"
+/*
+int main1(int argc, char *argv[]) {
     const char *filename = argv[1];
     char ***parsed = parse(filename);
     for (int i = 0; parsed[i] != NULL; i++) {
@@ -24,3 +24,4 @@ int main(int argc, char *argv[]) {
     while((wait_pid = wait(&status)) > 0);
     exit(EXIT_SUCCESS);
 }
+*/
