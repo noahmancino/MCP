@@ -21,7 +21,6 @@ int main(int argc, char *argv[]) {
     free_parsed(parsed);
     int status;
     pid_t wait_pid;
-    while((wait_pid = wait(&status)) > 0);
-    printf("waited");
+    while((wait_pid = wait(&status)) > 0) printf("waited for: %d\n", wait_pid);
     exit(EXIT_SUCCESS);
 }
