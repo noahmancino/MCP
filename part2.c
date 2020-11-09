@@ -8,9 +8,8 @@
 #include "MCP.h"
 
 void signaler(pid_t *pid_ary, int size, int signal) {
-    int pid = getpid();
     for (int i = 0; i < size; i++) {
-        printf("enter with signal %d\n", signal);
+        printf("sending signal %d\n", signal);
         kill(pid_ary[i], signal);
     }
 
@@ -35,15 +34,17 @@ int main(int argc, char *argv[]) {
             int signal;
             sigprocmask(SIG_BLOCK, &sigsur, NULL);
             sigwait(&sigsur, &signal);
-            printf("heyooo!");
             char *executable = parsed[i][0];
             char **child_argv = parsed[i];
             execvp(executable, child_argv);
         }
     }
     free_parsed(parsed);
+    printf("execution start:");
     signaler(pid_ary, i, SIGUSR1);
+    printf("execution stop:");
     signaler(pid_ary, i, SIGSTOP);
+    printf("execution resume:");
     signaler(pid_ary, i, SIGCONT);
     free(pid_ary);
     int status;
