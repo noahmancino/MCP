@@ -9,7 +9,7 @@
 
 void signaler(pid_t *pid_ary, int size, int signal) {
     for (int i = 0; i < size; i++) {
-        printf("sending signal %d\n", signal);
+        //printf("sending signal %d\n", signal);
         kill(pid_ary[i], signal);
     }
 
@@ -23,11 +23,15 @@ int main(int argc, char *argv[]) {
     for (i = 0; parsed[i] != NULL; i++) {
         int pid = fork();
         pid_ary[i] = pid;
+        printf("pid: %d\n", pid);
+        fflush(stdout);
         if (pid < 0) {
             printf("Fork sys call failure.");
             exit(EXIT_FAILURE);
         }
         if (!pid) {
+            printf("here");
+            fflush(stdout);
             sigset_t sigsur;
             sigemptyset(&sigsur);
             sigaddset(&sigsur, SIGUSR1);
@@ -36,20 +40,25 @@ int main(int argc, char *argv[]) {
             sigwait(&sigsur, &signal);
             char *executable = parsed[i][0];
             char **child_argv = parsed[i];
+            printf("executable: %s\n", executable);
+            fflush(stdout);
             execvp(executable, child_argv);
         }
     }
+    fflush(stdout);
     free_parsed(parsed);
-    printf("execution start:");
+    printf("execution start.\n");
     signaler(pid_ary, i, SIGUSR1);
-    printf("execution stop:");
+    printf("execution stop.\n");
+    sleep(1);
     signaler(pid_ary, i, SIGSTOP);
-    printf("execution resume:");
+    printf("execution resume.\n");
     signaler(pid_ary, i, SIGCONT);
     free(pid_ary);
     int status;
     pid_t wait_pid;
-    while((wait_pid = wait(&status)) > 0);
+    while((wait_pid = wait(&status)) > 0) printf("waited: %d\n", wait_pid);
+    sleep(1);
     exit(EXIT_SUCCESS);
 }
 

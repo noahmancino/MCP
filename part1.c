@@ -3,7 +3,7 @@
 #include <sys/wait.h>
 #include "MCP.h"
 
-int main1(int argc, char *argv[]) {
+int main(int argc, char *argv[]) {
     const char *filename = argv[1];
     char ***parsed = parse(filename);
     for (int i = 0; parsed[i] != NULL; i++) {
@@ -22,5 +22,6 @@ int main1(int argc, char *argv[]) {
     int status;
     pid_t wait_pid;
     while((wait_pid = wait(&status)) > 0);
+    printf("waited");
     exit(EXIT_SUCCESS);
 }
