@@ -68,13 +68,14 @@ int main(int argc, char *argv[]) {
     int remain_pids = i;
     for (int j = 0; remain_pids; j = (j + 1) % i) {
         if (pid_ary[j] != 0) {
-            printf("j is %d\nremain is %d\npid is %d\n\n\n\n", j, remain_pids, pid_ary[j]);
+            fflush(stdout);
+            printf("continuing process %d\n", pid_ary[j]);
             kill(pid_ary[j], SIGCONT);
             sigwait(&sigsur, &signal);
-            alarm(7);
+            alarm(1);
             sigwait(&sigsur, &signal);
-            printf("singal: %d\n", signal);
             if (signal == SIGCHLD) {
+                printf("process %d completed \n", pid_ary[j]);
                 int status;
                 waitpid(pid_ary[j], &status, WNOHANG);
                 /*
@@ -93,13 +94,11 @@ int main(int argc, char *argv[]) {
                 fflush(stdout);
                 sigwait(&sigsur, &signal);
                 */
-
-                printf("am i waiting yet? %d\n", signal);
                 pid_ary[j] = 0;
                 --remain_pids;
             }
             else {
-                printf("killing it! \n\n\n\n\n\n");
+                printf("Stopping process %d\n", pid_ary[j]);
                 kill(pid_ary[j], SIGSTOP);
                 sigwait(&sigsur, &signal);
             }
