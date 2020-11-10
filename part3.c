@@ -8,7 +8,6 @@
 #include <sys/wait.h>
 #include "MCP.h"
 
-int child_fin = 0;
 
 void signaler(pid_t *pid_ary, int size, int signal) {
     for (int i = 0; i < size; i++) {
@@ -16,10 +15,12 @@ void signaler(pid_t *pid_ary, int size, int signal) {
     }
 }
 
+/*
 void handle_sigchld(int signal) {
     printf("sig child\n\n\n\n\n\n\n");
     child_fin = 1;
 }
+ */
 
 int main(int argc, char *argv[]) {
     // Parsing args
@@ -28,23 +29,23 @@ int main(int argc, char *argv[]) {
     // Initializing strage for child PIDs
     pid_t *pid_ary = (pid_t*)malloc(sizeof(pid_t) * MAX_COMMANDS);
     // Add SIGUSR1 to blocked signals.
-    /*
+    int signal;
     sigset_t sigsur;
     sigemptyset(&sigsur);
-    sigaddset(&sigsur, SIGUSR1);
+    sigaddset(&sigsur, SIGALRM);
+    sigaddset(&sigsur, SIGCHLD);
     sigprocmask(SIG_BLOCK, &sigsur, NULL);
-     */
     // Setting up a signal handler for child termination
+    /*
     struct sigaction sig_act;
     sig_act.sa_handler = &handle_sigchld;
     sigaction(SIGCHLD, &sig_act, NULL);
+    */
     // i will be the length of the pid_ary
     int i;
     for (i = 0; parsed[i] != NULL; i++) {
         int pid = fork();
         pid_ary[i] = pid;
-        printf("pid: %d\n", pid);
-        fflush(stdout);
         if (pid < 0) {
             printf("Fork sys call failure.");
             exit(EXIT_FAILURE);
@@ -61,28 +62,49 @@ int main(int argc, char *argv[]) {
             execvp(executable, child_argv);
         }
         kill(pid, SIGSTOP);
+        sigwait(&sigsur, &signal);
     }
     free_parsed(parsed);
     int remain_pids = i;
     for (int j = 0; remain_pids; j = (j + 1) % i) {
-        printf("j is %d\nremain is %d\npid is %d\n", j, remain_pids, pid_ary[j]);
         if (pid_ary[j] != 0) {
+            printf("j is %d\nremain is %d\npid is %d\n\n\n\n", j, remain_pids, pid_ary[j]);
             kill(pid_ary[j], SIGCONT);
-            child_fin = 0;
-            sleep(1);
-            if (child_fin) {
+            sigwait(&sigsur, &signal);
+            alarm(7);
+            sigwait(&sigsur, &signal);
+            printf("singal: %d\n", signal);
+            if (signal == SIGCHLD) {
                 int status;
-                printf("wait: %d\n", waitpid(pid_ary[j], &status, WNOHANG));
+                waitpid(pid_ary[j], &status, WNOHANG);
+                /*
+                sigwait(&sigsur, &signal);
+                fflush(stdout);
+                printf("sigwait1\n");
+                fflush(stdout);
+                sigwait(&sigsur, &signal);
+                printf("sigwait2\n");
+                fflush(stdout);
+                sigwait(&sigsur, &signal);
+                printf("sigwait3\n");
+                fflush(stdout);
+                sigwait(&sigsur, &signal);
+                printf("sigwait4\n");
+                fflush(stdout);
+                sigwait(&sigsur, &signal);
+                */
+
+                printf("am i waiting yet? %d\n", signal);
                 pid_ary[j] = 0;
                 --remain_pids;
             }
             else {
+                printf("killing it! \n\n\n\n\n\n");
                 kill(pid_ary[j], SIGSTOP);
+                sigwait(&sigsur, &signal);
             }
         }
     }
-
-
 
     free(pid_ary);
     //int status;
