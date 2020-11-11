@@ -16,7 +16,7 @@ void signaler(pid_t *pid_ary, int size, int signal) {
 }
 
 void show_p(int pid) {
-    // The beauty of hard coding.
+    printf("\n\n");
     char procfilename[500];
     char *proctext = NULL;
     sprintf(procfilename, "/proc/%d/stat", pid);
@@ -26,26 +26,45 @@ void show_p(int pid) {
     char *tok;
     tok = strtok(proctext, " ");
     for (int i = 1; i < 50; i++) {
-        fflush(stdout);
-        printf("%s\n", tok);
+        // Wow, just the epitome of beauty.
+        if (i == 1) {
+            printf("Next scheduled process has ID: %s\n", tok);
+        }
+        if (i == 2) {
+            printf("This process has executable name: %s\n", tok);
+        }
+        if (i == 14) {
+            printf("This process has had %s ticks of CPU time\n", tok);
+        }
+        if (i == 18) {
+            printf("This process currently has priority %s\n", tok);
+        }
+        if (i == 20) {
+            printf("This process has %s thread(s) of execution\n", tok);
+        }
+        if (i == 39) {
+            printf("This process was last scheduled on CPU %s\n", tok);
+        }
         tok = strtok(NULL, " ");
     }
+    free(proctext);
+    fclose(proc);
+    printf("\n\n");
 }
 
 int main(int argc, char *argv[]) {
-    // Parsing args
     const char *filename = argv[1];
     char ***parsed = parse(filename);
-    // Initializing storage for child PIDs
+
     pid_t *pid_ary = (pid_t*)malloc(sizeof(pid_t) * MAX_COMMANDS);
-    // Add SIGCHLD and SIGALRM to blocked signals.
+
     int signal;
     sigset_t sigsur;
     sigemptyset(&sigsur);
     sigaddset(&sigsur, SIGALRM);
     sigaddset(&sigsur, SIGCHLD);
     sigprocmask(SIG_BLOCK, &sigsur, NULL);
-    // i will be the length of the pid_ary
+
     int i;
     for (i = 0; parsed[i] != NULL; i++) {
         int pid = fork();
@@ -55,10 +74,6 @@ int main(int argc, char *argv[]) {
             exit(EXIT_FAILURE);
         }
         if (!pid) {
-            /*
-            int signal;
-            sigwait(&sigsur, &signal);
-             */
             char *executable = parsed[i][0];
             char **child_argv = parsed[i];
             printf("executable: %s\n", executable);
@@ -68,12 +83,12 @@ int main(int argc, char *argv[]) {
         kill(pid, SIGSTOP);
         sigwait(&sigsur, &signal);
     }
+
     free_parsed(parsed);
     int remain_pids = i;
     for (int j = 0; remain_pids; j = (j + 1) % i) {
         if (pid_ary[j] != 0) {
             fflush(stdout);
-            printf("continuing process %d\n", pid_ary[j]);
             show_p(pid_ary[j]);
             kill(pid_ary[j], SIGCONT);
             sigwait(&sigsur, &signal);
@@ -93,7 +108,6 @@ int main(int argc, char *argv[]) {
             }
         }
     }
-
     free(pid_ary);
     fflush(stdout);
     sleep(1);
